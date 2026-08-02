@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: wallet-transfer-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/wallet_db}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      pool-name: WalletHikariPool
+    jpa:
+      hibernate:
+        ddl-auto: validate
+      show-sql: true
+      open-in-view: false
+      properties:
+        hibernate:
+          dialect: org.hibernate.dialect.PostgreSQLDialect
+          jdbc.batch_size: 25
+    flyway:
+      enabled: true
+      locations: classpath:db/migration
+      validate-on-migrate: true
+    jackson:
+      serialization:
+        write-dates-as-timestamps: false
+      deserialization:
+        fail-on-unknown-properties: false
+      default-property-inclusion: non_null
+  server:
+    port: 9191
+    servlet:
+      context-path: /api
+    error:
+      include-message: never
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics,prometheus
+    endpoint:
+      health:
+        show-details: always
+        probes:
+          enabled: true
+    metrics:
+      tags:
+        application: ${spring.application.name}
+      distribution:
+        percentiles-histogram:
+          http.server.requests: true
+        percentiles:
+          transfer.processing.duration: 0.5,0.95,0.99
+  logging:
+    level:
+      root: INFO
+      com.wallet.transfer: DEBUG
+      org.springframework.transaction: DEBUG
+  wallet:
+    idempotency:
+      ttl-hours: 24
+      stale-in-progress-minutes: 30
+    transfer:
+      max-amount: 10000000
