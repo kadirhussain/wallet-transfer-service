@@ -1,11 +1,12 @@
-# Wallet Transfer Service
+# 💸 Wallet Transfer Service
 
 A **production-grade, financial-domain backend service** implementing peer-to-peer wallet transfers with industry-standard reliability guarantees found in real-world payment platforms like Razorpay, PhonePe, and Paytm.
 
-   Built to demonstrate deep understanding of **distributed systems**, **transactional safety**, **idempotency**, and **concurrent request handling** — the core engineering challenges of fintech backends.
+> Built to demonstrate deep understanding of **distributed systems**, **transactional safety**, **idempotency**, and **concurrent request handling** — the core engineering challenges of fintech backends.
 
+---
 
-## Table of Contents
+## 📌 Table of Contents
 
 - [System Overview](#system-overview)
 - [Architecture](#architecture)
@@ -20,40 +21,43 @@ A **production-grade, financial-domain backend service** implementing peer-to-pe
 - [Running Tests](#running-tests)
 - [Project Structure](#project-structure)
 
+---
 
 ## System Overview
 
 The Wallet Transfer Service processes wallet-to-wallet money transfers with the following **non-negotiable financial guarantees**:
 
-|         Guarantee            |                    Implementation                         |
-| **Exactly-once execution**   | Idempotency keys with `INSERT ... ON CONFLICT DO NOTHING` |
-| **No double-spend**          | Pessimistic row-level locking (`SELECT FOR UPDATE`)       |
-| **No deadlocks**             | Wallet locks always acquired in ascending UUID order      |
-| **Atomic transfers**         | Single `@Transactional` boundary covers all 7 steps       |
-| **Auditable ledger**         | Append-only double-entry ledger (never UPDATE/DELETE) m   |
-| **Safe state transitions**   | State machine: `PENDING → PROCESSED / FAILED` (terminal states are final) |
-| **No floating-point money**  | `NUMERIC(19,4)` — never `float` or `double`               |
+| Guarantee | Implementation |
+|---|---|
+| **Exactly-once execution** | Idempotency keys with `INSERT ... ON CONFLICT DO NOTHING` |
+| **No double-spend** | Pessimistic row-level locking (`SELECT FOR UPDATE`) |
+| **No deadlocks** | Wallet locks always acquired in ascending UUID order |
+| **Atomic transfers** | Single `@Transactional` boundary covers all 7 steps |
+| **Auditable ledger** | Append-only double-entry ledger (never UPDATE/DELETE) |
+| **Safe state transitions** | State machine: `PENDING → PROCESSED / FAILED` (terminal states are final) |
+| **No floating-point money** | `NUMERIC(19,4)` — never `float` or `double` |
 
+---
 
 ## Architecture
 
-
+```
 ┌─────────────────────────────────────────────────────────────┐
-│                        Client / API                         │
+│                        Client / API                          │
 └─────────────────────┬───────────────────────────────────────┘
                       │  HTTP
 ┌─────────────────────▼───────────────────────────────────────┐
-│                    API Layer                                │
+│                    API Layer                                  │
 │   TransferController  │  WalletController  │  GlobalExceptionHandler  │
-│   RequestIdFilter (MDC tracing)                             │
+│   RequestIdFilter (MDC tracing)                              │
 └─────────────────────┬───────────────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────────────┐
-│                  Service Layer                              │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐     │
-│  │           TransferServiceImpl                       │     │
-│  │                                                      │    │
+│                  Service Layer                                │
+│                                                               │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │           TransferServiceImpl                        │    │
+│  │                                                       │    │
 │  │  1. Idempotency guard (INSERT ON CONFLICT DO NOTHING)│    │
 │  │  2. Same-wallet validation                           │    │
 │  │  3. SELECT FOR UPDATE (sorted ASC — deadlock safe)   │    │
@@ -62,19 +66,19 @@ The Wallet Transfer Service processes wallet-to-wallet money transfers with the 
 │  │  6. Balance mutation (debit source, credit dest)     │    │
 │  │  7. State transition PENDING → PROCESSED             │    │
 │  │  8. Cache response in idempotency record             │    │
-│  └─────────────────────────────────────────────────────┘     │
-│                                                              │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                               │
 │   WalletServiceImpl  │  IdempotencyCleanupJob                │
 └─────────────────────┬───────────────────────────────────────┘
                       │
 ┌─────────────────────▼───────────────────────────────────────┐
-│                Repository Layer                              │
+│                Repository Layer                               │
 │  WalletRepository  │  TransferRepository                     │
 │  LedgerEntryRepository  │  IdempotencyKeyRepository          │
 └─────────────────────┬───────────────────────────────────────┘
                       │  JPA / Hibernate
 ┌─────────────────────▼───────────────────────────────────────┐
-│              PostgreSQL 16                                   │
+│              PostgreSQL 16                                    │
 │  wallets │ transfers │ ledger_entries                        │
 │  idempotency_keys │ audit_log                                │
 └─────────────────────────────────────────────────────────────┘
@@ -282,14 +286,15 @@ Content-Type: application/json
 
 ### Other Endpoints
 
-| Method |     Path                |            Description                 |
-| `POST` | `/api/v1/wallets`       |          Create wallet                 |
-| `GET`  | `/api/v1/wallets/{id}`  |   Get wallet details + balance         |
-| `POST` | `/api/v1/transfers`     |   Execute transfer (idempotent)        |
-| `GET`  | `/api/v1/transfers/{id}`|  Get transfer + ledger entries         |
-| `GET`  | `/api/v1/transfers?walletId=&page=&size=` | Paginated transfer history |
-| `GET`  | `/actuator/health`      | Health check (liveness + readiness)    |
-| `GET`  | `/actuator/prometheus`  | Prometheus metrics scrape endpoint     |
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/v1/wallets` | Create wallet |
+| `GET` | `/api/v1/wallets/{id}` | Get wallet details + balance |
+| `POST` | `/api/v1/transfers` | Execute transfer (idempotent) |
+| `GET` | `/api/v1/transfers/{id}` | Get transfer + ledger entries |
+| `GET` | `/api/v1/transfers?walletId=&page=&size=` | Paginated transfer history |
+| `GET` | `/actuator/health` | Health check (liveness + readiness) |
+| `GET` | `/actuator/prometheus` | Prometheus metrics scrape endpoint |
 
 ### Error Responses
 
@@ -380,12 +385,13 @@ Every request gets a unique `requestId` injected into MDC by `RequestIdFilter`. 
 
 ### Custom Micrometer Metrics (→ Prometheus → Grafana)
 
-|        Metric                 | Type     |             Description          |
-| `transfers.processed.total`   | Counter  | Successfully processed transfers |
-| `transfers.failed.total`      | Counter  | Failed transfers                 |
-| `transfers.duplicate.total`   | Counter  | Duplicate idempotency key hits   |
-| `transfers.amount`            | Distribution | Transfer amount distribution (p50, p95, p99) |
-| `transfer.processing.duration`| Timer    | End-to-end processing time       |
+| Metric | Type | Description |
+|---|---|---|
+| `transfers.processed.total` | Counter | Successfully processed transfers |
+| `transfers.failed.total` | Counter | Failed transfers |
+| `transfers.duplicate.total` | Counter | Duplicate idempotency key hits |
+| `transfers.amount` | Distribution | Transfer amount distribution (p50, p95, p99) |
+| `transfer.processing.duration` | Timer | End-to-end processing time |
 
 ### Health Endpoints
 ```
@@ -398,17 +404,18 @@ GET /actuator/metrics          → all metrics
 
 ## Tech Stack
 
-| Component | Technology  | Version |
-| Language  | Java        |   17    |
-| Framework | Spring Boot |  3.5    |
-| ORM       | Spring Data JPA + Hibernate | 6.x |
-| Database  | PostgreSQL  | 16 |
-| Migrations| Flyway      | Latest  |
-| Metrics   | Micrometer + Prometheus | Latest |
-| Logging   | Logback + Logstash Encoder | 7.4 |
-| Utilities | Lombok      | Latest |
-| Testing   | JUnit 5 + Testcontainers | Latest |
-| Build     | Maven       | 3.8+   |
+| Component | Technology | Version |
+|---|---|---|
+| Language | Java | 21 |
+| Framework | Spring Boot | 3.3.0 |
+| ORM | Spring Data JPA + Hibernate | 6.x |
+| Database | PostgreSQL | 16 |
+| Migrations | Flyway | Latest |
+| Metrics | Micrometer + Prometheus | Latest |
+| Logging | Logback + Logstash Encoder | 7.4 |
+| Utilities | Lombok | Latest |
+| Testing | JUnit 5 + Testcontainers | Latest |
+| Build | Maven | 3.8+ |
 | Container | Docker + Docker Compose | Latest |
 
 ---
@@ -416,9 +423,9 @@ GET /actuator/metrics          → all metrics
 ## Running Locally
 
 ### Prerequisites
-- Java 17+
+- Java 21+
 - Docker + Docker Compose
-- Maven 3.5+
+- Maven 3.8+
 
 ### Step 1 — Start PostgreSQL
 ```bash
@@ -480,12 +487,13 @@ mvn test
 
 ### Test Coverage
 
-|        Test Class          | Phase    |              What It Tests                               |
-| `TransferServiceTest`      | 1 + 2    | Happy path, all failure scenarios, idempotency replay    |
-| `LedgerConsistencyTest`    | 1        | Double-entry invariant, reconciliation, balance snapshots|
-| `TransferStateMachineTest` | 1        | All state transitions including invalid ones             |
-| `ConcurrentTransferTest`   | 3        | 20 concurrent debits, bidirectional deadlock safety, 50 concurrent same-key requests |
-| `TransferControllerTest`   | 3        | Full HTTP layer via REST-assured + real server           |
+| Test Class | Phase | What It Tests |
+|---|---|---|
+| `TransferServiceTest` | 1 + 2 | Happy path, all failure scenarios, idempotency replay |
+| `LedgerConsistencyTest` | 1 | Double-entry invariant, reconciliation, balance snapshots |
+| `TransferStateMachineTest` | 1 | All state transitions including invalid ones |
+| `ConcurrentTransferTest` | 3 | 20 concurrent debits, bidirectional deadlock safety, 50 concurrent same-key requests |
+| `TransferControllerTest` | 3 | Full HTTP layer via REST-assured + real server |
 
 ### Concurrency Test Highlights
 
@@ -503,11 +511,12 @@ mvn test
 
 ## Environment Variables
 
-|       Variable           |             Default                          | Description                    |
-| `DB_URL`                 | `jdbc:postgresql://localhost:5432/wallet_db` | PostgreSQL JDBC URL            |
-| `DB_USERNAME`            | `root`                                       | Database username              |
-| `DB_PASSWORD`            | `root`                                       | Database password              |
-| `SPRING_PROFILES_ACTIVE` |                                              | Set to `prod` for JSON logging |
+| Variable | Default | Description |
+|---|---|---|
+| `DB_URL` | `jdbc:postgresql://localhost:5432/wallet_db` | PostgreSQL JDBC URL |
+| `DB_USERNAME` | `wallet_user` | Database username |
+| `DB_PASSWORD` | `wallet_pass` | Database password |
+| `SPRING_PROFILES_ACTIVE` | — | Set to `prod` for JSON logging |
 
 ---
 
