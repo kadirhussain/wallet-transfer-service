@@ -406,7 +406,7 @@ GET /actuator/metrics          → all metrics
 
 | Component | Technology | Version |
 |---|---|---|
-| Language | Java | 21 |
+| Language | Java | 17 |
 | Framework | Spring Boot | 3.3.0 |
 | ORM | Spring Data JPA + Hibernate | 6.x |
 | Database | PostgreSQL | 16 |
@@ -423,9 +423,9 @@ GET /actuator/metrics          → all metrics
 ## Running Locally
 
 ### Prerequisites
-- Java 21+
+- Java 17+
 - Docker + Docker Compose
-- Maven 3.8+
+- Maven 3.5+
 
 ### Step 1 — Start PostgreSQL
 ```bash
