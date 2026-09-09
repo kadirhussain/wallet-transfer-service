@@ -27,4 +27,9 @@ public class WalletController {
     public ResponseEntity<WalletResponse> get(@PathVariable UUID id) {
         return ResponseEntity.ok(walletService.findById(id));
     }
+
+    @GetMapping("/isRunning")
+    public ResponseEntity<Object> isRuuning(){
+        return ResponseEntity.status(HttpStatus.OK).body("Service is running");
+    }
 }

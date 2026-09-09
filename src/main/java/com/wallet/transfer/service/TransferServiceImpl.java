@@ -73,9 +73,9 @@ public class TransferServiceImpl implements TransferService {
         }
 
 
-        //--3 Acquire perssimistic row locks(deadLock-safe: always lock lower UUID first----------
+        //--3 Acquire pessimistic row locks(deadLock-safe: always lock lower UUID first----------
 
-        List<UUID> sortedIds = new ArrayList<>(List.of(req.getFromWalletId(), req.getFromWalletId()));
+        List<UUID> sortedIds = new ArrayList<>(List.of(req.getFromWalletId(), req.getToWalletId()));
         Collections.sort(sortedIds);
 
         List<Wallet> locked = walletRepository.findAndLockByIds(sortedIds);
