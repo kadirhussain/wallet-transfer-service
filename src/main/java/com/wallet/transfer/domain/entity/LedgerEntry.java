@@ -18,6 +18,7 @@ import java.util.UUID;
 @Immutable
 @Table(name="ledger_entries")
 public class LedgerEntry {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name="id",updatable=false,nullable=false)

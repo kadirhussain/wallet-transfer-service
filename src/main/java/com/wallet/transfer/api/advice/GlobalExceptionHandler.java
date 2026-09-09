@@ -7,6 +7,8 @@ import org.springframework.http.*;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -66,5 +68,15 @@ public class GlobalExceptionHandler {
     }
     private ErrorResponse err(String code, String msg, List<ErrorResponse.FieldError> errs) {
         return ErrorResponse.builder().code(code).message(msg).errors(errs).timestamp(OffsetDateTime.now()).build();
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResource(NoResourceFoundException ex) {
+        return ResponseEntity.notFound().build();
+    }
+
+    @ExceptionHandler(DuplicateUserException.class)
+    public ResponseEntity<String> handleDuplicateUser(DuplicateUserException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
 }
