@@ -1,8 +1,33 @@
 # 💸 Wallet Transfer Service
 
-A **production-grade, financial-domain backend service** implementing peer-to-peer wallet transfers with industry-standard reliability guarantees found in real-world payment platforms like Razorpay, PhonePe, and Paytm.
+A **production-grade, financial-domain backend service** implementing peer-to-peer wallet transfers with industry-standard reliability guarantees found in real-world payment platforms like Razorpay[...]
 
-> Built to demonstrate deep understanding of **distributed systems**, **transactional safety**, **idempotency**, and **concurrent request handling** — the core engineering challenges of fintech backends.
+> Built to demonstrate deep understanding of **distributed systems**, **transactional safety**, **idempotency**, and **concurrent request handling** — the core engineering challenges of fintech b[...]
+
+---
+
+## What's new (feat: add authentication and user management with JWT and Spring Security)
+
+This release introduces authentication and user management powered by Spring Security and JWT. Highlights:
+
+- Add Spring Security and JWT (JJWT) dependencies with version management
+- Implement JWT utility for token generation and validation
+- Create User entity with roles and UserDetails integration
+- Add CustomUserDetailsService for user authentication
+- Implement UserService with CRUD operations
+- Create AuthController for token generation endpoint
+- Add UserController with user management endpoints (create, read, update, delete)
+- Add JwtAuthFilter for request authentication validation
+- Configure SecurityConfig with filter chain and password encoding
+- Add role-based authorization (ROLE_USER, ROLE_ADMIN)
+- Create database migrations for users and user_roles tables
+- Add exception handling for DuplicateUserException and resource not found
+- Add RequestIdFilter enhancements with logging (HTTP method, URI, client IP, User-Agent)
+- Fix typo in TransferServiceImpl: "perssimistic" → "pessimistic"
+- Fix bug in TransferServiceImpl: use correct wallet ID for locking
+- Add spring-boot-devtools for development convenience
+- Add health check endpoint in WalletController
+- Add JWT configuration properties
 
 ---
 
@@ -10,6 +35,8 @@ A **production-grade, financial-domain backend service** implementing peer-to-pe
 
 - [System Overview](#system-overview)
 - [Architecture](#architecture)
+- [Security & Authentication](#security--authentication)
+- [User Management](#user-management)
 - [Key Engineering Decisions](#key-engineering-decisions)
 - [Database Design](#database-design)
 - [API Reference](#api-reference)
@@ -123,7 +150,7 @@ ON CONFLICT(idempotency_key) DO NOTHING
 **Returns 1** → new key, proceed with transfer.  
 **Returns 0** → duplicate, return cached response immediately.
 
-This is the only reliable approach. Application-level `findById + conditional insert` has a race window between the read and the write. The database `PRIMARY KEY` constraint enforces uniqueness atomically — no race window exists.
+This is the only reliable approach. Application-level `findById + conditional insert` has a race window between the read and the write. The database `PRIMARY KEY` constraint enforces uniqueness a[...]
 
 ---
 
@@ -156,7 +183,7 @@ Both transactions lock the lower UUID first → no circular wait → no deadlock
 
 ### 3. Double-Entry Ledger (Append-Only)
 
-Every transfer creates exactly two ledger entries — one DEBIT, one CREDIT. The ledger is **append-only** — rows are never updated or deleted. This is enforced by Hibernate's `@Immutable` annotation on `LedgerEntry`:
+Every transfer creates exactly two ledger entries — one DEBIT, one CREDIT. The ledger is **append-only** — rows are never updated or deleted. This is enforced by Hibernate's `@Immutable` anno[...]
 
 ```
 transfer_id  wallet      type    amount   balance_before  balance_after
@@ -206,7 +233,7 @@ public void markProcessed() {
 
 ### 5. Why READ_COMMITTED + SELECT FOR UPDATE (not SERIALIZABLE)
 
-`SERIALIZABLE` isolation prevents all anomalies but causes retry storms under high load. `READ_COMMITTED` + `SELECT FOR UPDATE` gives the same safety guarantee for the specific rows we care about, with far better throughput. We do targeted, manual serialization only on the two wallet rows involved in each transfer.
+`SERIALIZABLE` isolation prevents all anomalies but causes retry storms under high load. `READ_COMMITTED` + `SELECT FOR UPDATE` gives the same safety guarantee for the specific rows we care about[...]
 
 ---
 
@@ -408,6 +435,7 @@ GET /actuator/metrics          → all metrics
 |---|---|---|
 | Language | Java | 17 |
 | Framework | Spring Boot | 3.3.0 |
+| Security | Spring Security + JJWT | Latest |
 | ORM | Spring Data JPA + Hibernate | 6.x |
 | Database | PostgreSQL | 16 |
 | Migrations | Flyway | Latest |
